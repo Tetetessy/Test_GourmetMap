@@ -1195,6 +1195,10 @@
   <script src="js/core/constants.js"></script>
   <script src="js/core/state.js"></script>
   <script src="js/firebase/auth.js"></script>
+  <script src="js/map/map-core.js"></script>
+  <script src="js/map/area-marker.js"></script>
+  <script src="js/map/store-marker.js"></script>
+  <script src="js/map/map-render.js"></script>
 
   <script>
     function closeSimplePanels() {
@@ -1601,77 +1605,7 @@
       cloudDataReady = true;
       updateAuthUI();
 
-      map = L.map('map').setView([35.681236, 139.767125], 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
-
-      map.on('click', function(e) {
-        const curMap = getCurrentMap();
-
-        // 詳細ウィンドウの「📍 移動」を押した後は、次の地図タップ／クリック位置へ
-        // 対象ピンを移動する。店舗・エリアの双方に対応する。
-        if (pendingMoveTarget) {
-          if (curMap.isShared) {
-            pendingMoveTarget = null;
-            alert('🔒 共有されたマップのため、ピンの移動はできません。');
-            return;
-          }
-          const target = pendingMoveTarget;
-          pendingMoveTarget = null;
-          if (target.type === 'store') {
-            const store = (curMap.stores || []).find(s => s.id === target.id);
-            if (!store) return;
-            store.lat = e.latlng.lat;
-            store.lng = e.latlng.lng;
-            saveStorage();
-            renderCurrentMap();
-            showStoreDetail(store.id);
-          } else if (target.type === 'area') {
-            const area = (curMap.areas || []).find(a => a.id === target.id);
-            if (!area) return;
-            area.lat = e.latlng.lat;
-            area.lng = e.latlng.lng;
-            saveStorage();
-            renderCurrentMap();
-            showAreaDetail(area.id);
-          }
-          return;
-        }
-
-        // 店舗・エリア詳細を開いている間は、地図の空白部分をクリック／タッチしても
-        // 詳細ウィンドウを消したり内容を上書きしたりしない。
-        // 店舗登録・エリア登録中だけは、従来どおり地図タップで位置を指定できる。
-        const detailArea = document.getElementById('detail-area');
-        if (detailArea && detailArea.style.display === 'block' && !pendingRegistrationType) return;
-
-        if (curMap.isShared) {
-          alert('🔒 共有されたマップのため、ピンの作成はできません。');
-          return;
-        }
-
-        tempPinLocation = e.latlng;
-        if (tempMarker) map.removeLayer(tempMarker);
-        tempMarker = L.marker(e.latlng, { opacity: 0.9 }).addTo(map);
-        
-        const detailPanel = document.getElementById('detail-area');
-        const detailContent = document.getElementById('detail-content');
-        detailPanel.style.display = 'block';
-
-        detailContent.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <p style="color:var(--primary-color); font-weight:bold; margin:0;">📍 ピンを置きました</p>
-          </div>
-          <p style="font-size:11.5px; color:#666; margin-top:4px;">「📍 店舗登録」または「🚩 エリア登録」を押すと登録できます。</p>
-        `;
-
-        // 登録ボタンを先に押した場合でも、ここではピンを置くだけにする。
-        // ピンを置いた直後に登録ウィンドウを自動表示することはしない。
-        if (pendingRegistrationType) {
-          pendingRegistrationType = null;
-        }
-      });
+      initializeMapAndInteractions();
 
       initSearchOptions();
       renderCurrentMap();
@@ -1722,46 +1656,7 @@
       updateAreaDropdown();
       updateAreaMovePanel();
 
-      mapStoreMarkers.forEach(m => map.removeLayer(m));
-      mapAreaMarkers.forEach(m => map.removeLayer(m));
-      mapStoreMarkers = [];
-      mapAreaMarkers = [];
-
-      const curMap = getCurrentMap();
-
-      (curMap.areas || []).forEach(area => {
-        const colorObj = AREA_COLORS.find(c => c.id === area.color) || AREA_COLORS[0];
-        const areaIcon = L.divIcon({
-          className: '',
-          html: `<div class="area-custom-pin" style="background: ${colorObj.bg};">🚩 ${area.name}</div>`,
-          iconSize: [null, null],
-          iconAnchor: [30, 15]
-        });
-        const marker = L.marker([area.lat, area.lng], { icon: areaIcon }).addTo(map);
-        marker.on('click', (e) => {
-          L.DomEvent.stopPropagation(e);
-          showAreaDetail(area.id);
-        });
-        mapAreaMarkers.push(marker);
-      });
-
-      (curMap.stores || []).forEach(store => {
-        const shape = STORE_PIN_SHAPES.find(x => x.id === store.pinShape) || STORE_PIN_SHAPES[0];
-        const color = STORE_PIN_COLORS.find(x => x.id === store.pinColor) || STORE_PIN_COLORS[0];
-        const shapeClass = shape.id === 'double-circle' ? 'store-pin-double-circle' : `store-pin-${shape.id}`;
-        const activeList = window.activeMapListId || '';
-        const inActiveList = !activeList || ((store.listIds || []).includes(activeList) || store.listId === activeList);
-        const iconHtml = `<div class="store-custom-pin ${shapeClass}${inActiveList ? '' : ' store-pin-dimmed'}" style="background:${color.bg};"><span class="store-pin-symbol">${shape.icon}</span></div>`;
-        const storeIcon = L.divIcon({
-          className: '', html: iconHtml, iconSize: [34,34], iconAnchor: [17,17]
-        });
-        const marker = L.marker([store.lat, store.lng], { icon: storeIcon }).addTo(map);
-        marker.on('click', (e) => {
-          L.DomEvent.stopPropagation(e);
-          showStoreDetail(store.id);
-        });
-        mapStoreMarkers.push(marker);
-      });
+      renderMapMarkers(getCurrentMap());
     }
 
     function updateIndicator() {
