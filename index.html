@@ -1191,6 +1191,7 @@
   </div>
 
   <script src="js/firebase/firebase-init.js"></script>
+    <script src="js/firebase/database.js"></script>
   <script src="js/core/constants.js"></script>
   <script src="js/core/state.js"></script>
 
@@ -1327,7 +1328,7 @@
       // これでPC・スマホなど端末が変わっても同じ店舗・エリア・リストを利用できる。
       if (currentUser.loggedIn && currentUser.uid) {
         try {
-          const snapshot = await database.ref(`users/${currentUser.uid}`).once('value');
+          const snapshot = await readUserDatabase(currentUser.uid);
           const cloudData = snapshot.val();
 
           if (cloudData) {
@@ -1483,8 +1484,8 @@
         createdAt: mapObj.shareCreatedAt || firebase.database.ServerValue.TIMESTAMP,
         updatedAt: firebase.database.ServerValue.TIMESTAMP
       };
-      await database.ref(`sharedMaps/${code}`).set(payload);
-      try { await database.ref(`invalidSharedCodes/${code}`).remove(); } catch (e) { console.warn('無効コード記録の削除はスキップ:', e); }
+      await writeSharedMapDatabase(code, payload);
+      try { await removeInvalidSharedCodeDatabase(code); } catch (e) { console.warn('無効コード記録の削除はスキップ:', e); }
       mapObj.shareCode = code;
       mapObj.shareSnapshot = snapshot;
       mapObj.shareVersion = version;
@@ -1495,9 +1496,9 @@
     }
 
     async function readSharedCode(code) {
-      const snapshot = await database.ref(`sharedMaps/${code}`).once('value');
+      const snapshot = await readSharedMapDatabase(code);
       if (snapshot.exists()) return { status: 'valid', data: snapshot.val() };
-      const invalid = await database.ref(`invalidSharedCodes/${code}`).once('value');
+      const invalid = await readInvalidSharedCodeDatabase(code);
       if (invalid.exists()) return { status: 'invalid', data: invalid.val() };
       return { status: 'missing', data: null };
     }
@@ -1505,7 +1506,7 @@
     function stopSharedMapListener(mapId) {
       const listener = sharedMapListeners[mapId];
       if (!listener) return;
-      try { listener.ref.off('value', listener.handler); } catch (e) { console.warn('共有同期解除警告:', e); }
+      try { stopListeningSharedMapDatabase(listener); } catch (e) { console.warn('共有同期解除警告:', e); }
       delete sharedMapListeners[mapId];
     }
 
@@ -1513,7 +1514,6 @@
       if (!sharedMap || !sharedMap.isShared || !sharedMap.sourceShareCode) return;
       const code = sharedMap.sourceShareCode;
       if (sharedMapListeners[sharedMap.id]) return;
-      const ref = database.ref(`sharedMaps/${code}`);
       const handler = (snapshot) => {
         if (!snapshot.exists()) return;
         const latest = snapshot.val() || {};
@@ -1540,13 +1540,12 @@
           updateShareCodeStatus();
         }
       };
-      ref.on('value', handler);
-      sharedMapListeners[sharedMap.id] = { ref, handler };
+      sharedMapListeners[sharedMap.id] = listenSharedMapDatabase(code, handler);
     }
 
     function startAllSharedMapListeners() {
       Object.values(sharedMapListeners).forEach(listener => {
-        try { listener.ref.off('value', listener.handler); } catch (e) {}
+        try { stopListeningSharedMapDatabase(listener); } catch (e) {}
       });
       sharedMapListeners = {};
       (maps || []).filter(m => m && m.isShared && m.sourceShareCode).forEach(startSharedMapListener);
@@ -1555,8 +1554,8 @@
     async function invalidateShareCode(mapObj, reason = '共有コードが変更されたため、このコードは無効になりました。') {
       if (!mapObj || mapObj.isShared || !mapObj.shareCode || !currentUser.uid) return;
       const code = mapObj.shareCode;
-      await database.ref(`sharedMaps/${code}`).remove();
-      await database.ref(`invalidSharedCodes/${code}`).set({
+      await removeSharedMapDatabase(code);
+      await writeInvalidSharedCodeDatabase(code, {
         ownerUid: currentUser.uid, reason, invalidatedAt: firebase.database.ServerValue.TIMESTAMP
       });
       mapObj.shareCode = '';
@@ -1590,7 +1589,7 @@
           name: currentUser.name || 'ユーザー', email: currentUser.email || '',
           maps: JSON.parse(JSON.stringify(maps || [])), currentMapId: currentMapId || ''
         };
-        cloudSaveInProgress = cloudSaveInProgress.catch(() => {}).then(() => database.ref(`users/${currentUser.uid}`).set(payload));
+        cloudSaveInProgress = cloudSaveInProgress.catch(() => {}).then(() => writeUserDatabase(currentUser.uid, payload));
 
         if (curMap && !curMap.isShared && curMap.shareCode) {
           const code = curMap.shareCode;
@@ -3121,8 +3120,8 @@
       if(statusText)statusText.textContent='現在の状態：🟠 発行・更新処理中…'; if(note)note.textContent='共有データをFirebaseへ反映しています。';
       try{
         if(curMap.shareCode&&curMap.shareCode!==newCode){
-          const oldCode=curMap.shareCode; await database.ref(`sharedMaps/${oldCode}`).remove();
-          await database.ref(`invalidSharedCodes/${oldCode}`).set({ownerUid:currentUser.uid,reason:'共有元で共有コードが変更されたため、このコードは利用できません。',replacedBy:newCode,invalidatedAt:firebase.database.ServerValue.TIMESTAMP});
+          const oldCode=curMap.shareCode; await removeSharedMapDatabase(oldCode);
+          await writeInvalidSharedCodeDatabase(oldCode, {ownerUid:currentUser.uid,reason:'共有元で共有コードが変更されたため、このコードは利用できません。',replacedBy:newCode,invalidatedAt:firebase.database.ServerValue.TIMESTAMP});
           curMap.shareCode='';curMap.shareSnapshot='';
         }
         await publishShareCode(curMap,newCode);
