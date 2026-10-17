@@ -1218,40 +1218,10 @@
   <script src="js/share/share-service.js"></script>
   <script src="js/share/share-modal.js"></script>
   <script src="js/share/share-import.js"></script>
+  <script src="js/ui/modal.js"></script>
+  <script src="js/ui/panel.js"></script>
+  <script src="js/ui/theme.js"></script>
   <script>
-    function closeSimplePanels() {
-      const searchPanel = document.getElementById('search-panel');
-      const listPanel = document.getElementById('map-list-panel');
-      const areaPanel = document.getElementById('area-move-panel');
-      if (searchPanel) searchPanel.style.display = 'none';
-      if (listPanel) listPanel.style.display = 'none';
-      if (areaPanel) areaPanel.style.display = 'none';
-    }
-
-    function toggleMenu() {
-      // 操作メニューを開閉したら、簡易表示（絞り込み／リスト展開）は自動で閉じる。
-      closeSimplePanels();
-      const dropdown = document.getElementById('menu-dropdown');
-      dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
-    }
-
-    function closeDetailPanel() {
-      pendingMoveTarget = null;
-      const btn = document.getElementById('detail-move-btn');
-      if (btn) { btn.style.display = 'none'; btn.dataset.type = ''; btn.dataset.id = ''; }
-      document.getElementById('detail-area').style.display = 'none';
-    }
-
-    function closeModal() {
-      const modalContent = document.getElementById('modal-content');
-      if (modalContent) modalContent.classList.remove('list-manage-modal-content', 'store-register-modal-content', 'area-register-modal-content');
-      document.getElementById('modal-overlay').style.display = 'none';
-    }
-
-    function changeTheme(themeName) {
-      document.documentElement.setAttribute('data-theme', themeName);
-    }
-
     function generateDefaultShareCode() {
       const alpha = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
       const nums = '0123456789';
