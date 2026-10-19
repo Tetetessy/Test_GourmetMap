@@ -1,0 +1,100 @@
+    /* エリア移動：添付の「リスト表示」と同じ、シンプルな一覧→下方向展開レイアウト */
+    .area-move-section { margin:0 0 0; overflow:hidden; background:transparent; }
+    .area-move-section:last-child { margin-bottom:0; }
+    .area-move-section-title {
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      width:100%; min-height:34px; padding:7px 10px;
+      border:0; border-bottom:1px solid var(--border-color);
+      border-radius:0; background:transparent !important; color:var(--text-color) !important;
+      font-size:12px; font-weight:700; cursor:pointer; user-select:none; box-sizing:border-box;
+    }
+    .area-move-section-title:hover { background:color-mix(in srgb, var(--primary-color) 7%, var(--panel-solid-bg)) !important; }
+    .area-move-section-title * { color:var(--text-color) !important; }
+    .area-move-section-title .area-move-list-label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .area-move-section-title .area-move-list-count { font-size:10px; font-weight:600; opacity:.72; margin-left:3px; }
+    .area-move-section-title .area-move-arrow { flex:0 0 auto; font-size:10px; font-weight:800; color:var(--primary-color) !important; }
+    .area-move-items { display:none; padding:3px 8px 7px 22px; border:0; background:var(--panel-solid-bg); }
+    .area-move-item {
+      display:block; width:100%; text-align:left; margin:0; padding:7px 8px;
+      border:0; border-bottom:1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+      border-radius:0; background:transparent; color:var(--text-color) !important;
+      cursor:pointer; font-size:11px; font-weight:600; box-sizing:border-box;
+    }
+    .area-move-item:last-child { border-bottom:0; }
+    .area-move-item:hover, .area-move-item:active {
+      background:color-mix(in srgb, var(--primary-color) 9%, var(--panel-solid-bg));
+      color:var(--text-color) !important;
+    }
+    .area-move-empty { padding:7px 8px; font-size:10px; color:var(--text-color); opacity:.62; }
+    .area-move-list-container {
+      border:1px solid var(--border-color); border-radius:9px; overflow:hidden;
+      background:var(--panel-solid-bg); margin-bottom:8px;
+    }
+    .area-move-list-container:last-child { margin-bottom:0; }
+    .area-list-manage-box { border:1px solid var(--border-color); border-radius:8px; padding:8px; margin-bottom:8px; }
+    .area-list-assigned { margin-top:5px; padding-left:6px; border-left:2px solid var(--primary-color); }
+    .area-list-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px; background:rgba(0,0,0,.03); padding:5px 6px; margin-top:3px; border-radius:5px; font-size:10.5px; }
+    .list-manage-header { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; }
+    .list-manage-actions { display:grid; grid-template-columns:repeat(5, auto); gap:3px; justify-content:end; align-items:center; }
+    .list-store-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px; }
+    .list-store-actions { display:grid; grid-template-columns:repeat(2, auto); gap:3px; justify-content:end; }
+    .tag-grid { display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
+    .choice-tag { display:inline-flex; align-items:center; justify-content:center; min-height:28px; padding:5px 9px; border:1px solid var(--border-color); border-radius:999px; background:rgba(255,255,255,.6); color:var(--text-color); cursor:pointer; user-select:none; font-size:10.5px; line-height:1.15; }
+    .choice-tag.selected { background:var(--primary-gradient); color:#fff; border-color:transparent; box-shadow:0 2px 6px rgba(0,0,0,.15); }
+    .tag-filter-box { margin:5px 0; }
+    .tag-filter-title { font-size:10px; font-weight:bold; margin-bottom:3px; }
+    .area-manage-list-body { display:none; margin-top:6px; }
+    .area-manage-list-box.open .area-manage-list-body { display:block; }
+    .area-manage-list-toggle { cursor:pointer; user-select:none; }
+    .panel-scroll-10 { max-height:340px; overflow-y:auto; }
+    .modal-content .modal-scroll { max-height:60vh; overflow-y:auto; }
+    @media (max-width:700px) {
+
+
+      .list-manage-actions { grid-template-columns:repeat(3, auto); }
+      .list-store-actions { grid-template-columns:repeat(2, auto); }
+    }
+    /* リスト選択中表示：店舗数・エリア移動の直下。表示自体は目立たせつつマップ操作を遮らない */
+    .active-map-list-banner {
+      position:absolute;
+      top:50px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:998;
+      max-width:min(76vw, 560px);
+      padding:7px 16px;
+      border-radius:999px;
+      background:var(--primary-gradient);
+      color:#fff !important;
+      border:2px solid rgba(255,255,255,.82);
+      box-shadow:0 4px 14px rgba(0,0,0,.22);
+      font-size:12px;
+      line-height:1.35;
+      font-weight:800;
+      text-align:center;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      pointer-events:none;
+      user-select:none;
+    }
+
+    .area-list-row-actions { white-space:nowrap; }
+    .scroll-select-10 { max-height: 220px; overflow-y:auto; }
+    @media (max-width:700px) {
+      .area-move-panel { width:calc(100vw - 20px); left:50%; transform:translateX(-50%); top:132px; max-height:calc(100vh - 145px); }
+      .area-move-btn { min-width:120px; max-width:46vw; }
+    }
+
+    .store-pin-dimmed { filter: grayscale(1) saturate(0) opacity(.38); }
+    .map-list-store-summary { margin-top:7px; border-top:1px solid var(--border-color); padding-top:7px; max-height:none; flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+    .map-list-status-text { min-height:30px; line-height:1.45; white-space:normal; margin:0 0 7px !important; padding:7px 9px; border:1px solid rgba(111,78,55,.38); border-left:4px solid #8a6d3b; border-radius:7px; background:rgba(240,214,170,.28); color:var(--text-color); font-size:11px !important; font-weight:700; box-sizing:border-box; }
+    .map-list-selected-summary { margin:0 0 6px; padding:6px 9px; border-radius:7px; background:rgba(0,0,0,.045); border:1px solid var(--border-color); font-size:11px; font-weight:700; line-height:1.35; }
+    .search-results-count { margin-top:8px; padding:7px 9px; border-top:1px solid var(--border-color); background:rgba(0,0,0,.045); border-radius:6px; text-align:center; font-size:11px; font-weight:700; }
+    .list-manage-modal-content { width:min(94vw, 620px) !important; max-width:620px !important; }
+    .store-list-modal-content { width:min(94vw, 620px) !important; max-width:620px !important; }
+    .registered-store-legend { margin:-2px 0 8px; padding:7px 10px; border:1px solid rgba(111,78,55,.32); border-radius:7px; background:rgba(240,214,170,.24); font-size:11px; font-weight:700; line-height:1.4; }
+    .registered-store-row { display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:7px; padding:7px 6px; border-bottom:1px solid var(--border-color); }
+    .registered-store-name { font-weight:700; font-size:12px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .registered-store-meta { margin-top:2px; font-size:10px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-color); opacity:.78; }
+    .registered-store-fav { width:30px; text-align:center; font-size:20px; font-weight:800; }
