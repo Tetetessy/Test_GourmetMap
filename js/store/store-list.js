@@ -10,19 +10,6 @@ function generateListOptionsHtml(selectedId = '') {
       return html;
     }
 
-function addExistingListRow() {
-      const container = document.getElementById('existing-list-container');
-      const div = document.createElement('div');
-      div.className = 'existing-list-row';
-      div.style.cssText = 'display:flex; gap:4px; margin-bottom:4px;';
-      div.innerHTML = `
-        <select class="stylish-input existing-list-select scroll-select-10" size="10" style="flex:1;">
-          ${generateListOptionsHtml()}
-        </select>
-        <button type="button" onclick="this.parentElement.remove()" style="padding:4px 8px; background:#dc3545; color:#fff;">✕</button>
-      `;
-      container.appendChild(div);
-    }
 
 function addNewListRow() {
       const container = document.getElementById('new-list-container');

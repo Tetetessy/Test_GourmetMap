@@ -154,16 +154,3 @@ function startAllSharedMapListeners() {
   (maps || []).filter(m => m && m.isShared && m.sourceShareCode).forEach(startSharedMapListener);
 }
 
-async function invalidateShareCode(mapObj, reason = '共有コードが変更されたため、このコードは無効になりました。') {
-  if (!mapObj || mapObj.isShared || !mapObj.shareCode || !currentUser.uid) return;
-  const code = mapObj.shareCode;
-  await removeSharedMapDatabase(code);
-  await writeInvalidSharedCodeDatabase(code, {
-    ownerUid: currentUser.uid, reason, invalidatedAt: firebase.database.ServerValue.TIMESTAMP
-  });
-  mapObj.shareCode = '';
-  mapObj.shareSnapshot = '';
-  mapObj.shareVersion = (mapObj.shareVersion || 0) + 1;
-  mapObj.shareInvalidated = true;
-  mapObj.shareInvalidationReason = reason;
-}

@@ -29,7 +29,6 @@ function toggleSearchFilterSection(button) {
   if (arrow) arrow.textContent = isOpen ? '▲' : '▼';
 }
 
-function getSelectedSearchTagValues(containerId) { return Array.from(document.querySelectorAll(`#${containerId} .choice-tag.selected`)).map(el => el.dataset.value).filter(Boolean); }
 
 function getStoreForms(store) { return Array.isArray(store?.forms) ? store.forms : (store?.form ? [store.form] : []); }
 
